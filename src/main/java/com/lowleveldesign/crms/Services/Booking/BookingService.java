@@ -1,5 +1,6 @@
 package com.lowleveldesign.crms.Services.Booking;
 
+import com.lowleveldesign.crms.Controllers.FloorController;
 import com.lowleveldesign.crms.ErrorHandling.GenericClientException;
 import com.lowleveldesign.crms.ErrorHandling.ResourceNotFoundException;
 import com.lowleveldesign.crms.ErrorHandling.UserNotFoundException;
@@ -15,6 +16,8 @@ import com.lowleveldesign.crms.Services.Room.IRoomService;
 import com.lowleveldesign.crms.Services.User.IUserService;
 import com.lowleveldesign.crms.Utilities.BookingStatus;
 import com.lowleveldesign.crms.Utilities.Slot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +26,8 @@ import java.util.List;
 import java.util.UUID;
 @Component
 public class BookingService implements IBookingService{
+    private static final Logger logger = LoggerFactory.getLogger(FloorController.class);
+
     @Autowired
     private IBookingRepo bookingRepo;
     @Autowired
@@ -51,9 +56,11 @@ public class BookingService implements IBookingService{
                return booking;
            }
         }catch (UserNotFoundException ex){
+            logger.error("User with userId: {} cannot make a booking as this user is not a registered User!", booking.getUserId());
             throw new GenericClientException("You cannot make a booking as you are not a registered User!");
         }
         catch (ResourceNotFoundException ex){
+            logger.error("User with userId: {} cannot make a booking as the conference room with confRoomId:{} doesn't exist!", booking.getUserId(), booking.getConfRoomId());
             throw new GenericClientException("You cannot make a booking to a Conference Room that doesn't exist!");
         }
 
@@ -72,11 +79,15 @@ public class BookingService implements IBookingService{
 
     private boolean isSlotValid(Slot slot){
         //To: Check both the slots shouldn't be null and should be valid date-time format, past-time should be invalid
-        if(slot.getStartOfSlot() == null || slot.getEndOfSlot() == null)
+        if(slot.getStartOfSlot() == null || slot.getEndOfSlot() == null){
+            logger.error("Start or End slots can't be Null !");
             throw new GenericClientException("Start or End slots can't be Null !");
+        }
 
-        if(!(slot.getStartOfSlot().before(slot.getEndOfSlot())))
+        if(!(slot.getStartOfSlot().before(slot.getEndOfSlot()))){
+            logger.error("Start slot can't be greater than End slot !");
             throw new GenericClientException("Start slot can't be greater than End slot !");
+        }
 
         return true;
     }

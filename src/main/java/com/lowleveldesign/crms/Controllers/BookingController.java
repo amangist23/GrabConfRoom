@@ -3,6 +3,8 @@ package com.lowleveldesign.crms.Controllers;
 import com.lowleveldesign.crms.Models.Booking;
 import com.lowleveldesign.crms.Models.Building;
 import com.lowleveldesign.crms.Services.Booking.BookingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +17,15 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/crms/bookings")
 public class BookingController {
+    private static final Logger logger = LoggerFactory.getLogger(FloorController.class);
     @Autowired
     BookingService bookingService; //To Do-
 
-    //
     @PostMapping("")
     public ResponseEntity<Booking> addBooking(@RequestBody Booking booking){
+        logger.info("Incoming API POST request to addBooking with confRoomId parameter: {} , userId parameter: {} , bookedSlot startofSlot parameter: {} , bookedSlot endofSlot parameter: {}",
+                booking.getConfRoomId(), booking.getUserId(), booking.getBookedSlot().getStartOfSlot(), booking.getBookedSlot().getEndOfSlot());
+
         //Here I am taking the entire Booking object from the request body although i am ignoring the booking id as
         // id will be generated in the service layer.
         //To Do: HTTP Response for every response e.g. 200, 4XX

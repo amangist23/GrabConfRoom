@@ -1,10 +1,13 @@
 package com.lowleveldesign.crms.Services.User;
 
+import com.lowleveldesign.crms.Controllers.BuildingController;
 import com.lowleveldesign.crms.ErrorHandling.UserNotFoundException;
 import com.lowleveldesign.crms.Models.Booking;
 import com.lowleveldesign.crms.Models.User;
 import com.lowleveldesign.crms.Repositories.User.IUserRepo;
 import com.lowleveldesign.crms.Repositories.User.UserRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -14,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 @Service
 public class UserService implements IUserService{
+    private static final Logger logger = LoggerFactory.getLogger(BuildingController.class);
+
     @Autowired
     private IUserRepo userRepo;
 
@@ -34,8 +39,10 @@ public class UserService implements IUserService{
     public User getUserById(UUID userId) {
         User user = userRepo.getUserById(userId);
 
-        if (user==null)
+        if (user==null){
+            logger.error("The User with userId: {} you're trying to fetch doesn't exist!", userId);
             throw new UserNotFoundException("The User you're trying to fetch doesn't exist!");
+        }
         return user;
     }
 
