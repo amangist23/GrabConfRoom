@@ -15,19 +15,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/crms/users")
 public class UserController {
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     @Autowired
     private IUserService userService;
     @PostMapping("")
     public ResponseEntity<User> addUser(@RequestBody String name){
-        logger.info("Incoming API POST request to addUser with name parameter: {}", name);
         //To Do: HTTP Response for every response e.g. 200, 4XX
         return new ResponseEntity<>(userService.addUser(name), HttpStatus.CREATED); //CREATED = 201 //it's not 200=OK
     }
 
     @GetMapping("")
     public ResponseEntity<List<User>> getAllUsers() {
-        logger.info("Incoming API GET request to getAllUsers()");
         List<User> Users = userService.getAllUsers(); // variable name in camelCase;
         // here we can simply return empty [] and code=OK
         return new ResponseEntity<>(Users, HttpStatus.OK);
@@ -36,7 +33,6 @@ public class UserController {
     // as below endpoint to get particular user with the given userId????
     @GetMapping("/{userId}") //userId is unique attribute so URL parameter will be used not the query parametert(Query parameter is used non unique rows are needed)
     public ResponseEntity<User> getUserById(@PathVariable("userId") UUID userId){
-        logger.info("Incoming API GET request to getUserById with userId parameter: {}", userId);
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
