@@ -1,11 +1,9 @@
 package com.lowleveldesign.crms.Controllers;
 
-import com.lowleveldesign.crms.ErrorHandling.GlobalExceptionHandler;
-import com.lowleveldesign.crms.ErrorHandling.UserNotFoundException;
-import com.lowleveldesign.crms.Models.Booking;
 import com.lowleveldesign.crms.Models.User;
 import com.lowleveldesign.crms.Services.User.IUserService;
-import com.lowleveldesign.crms.Services.User.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

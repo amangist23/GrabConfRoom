@@ -7,6 +7,8 @@ import com.lowleveldesign.crms.Models.Room;
 import com.lowleveldesign.crms.Models.User;
 import com.lowleveldesign.crms.Services.Building.BuildingService;
 import com.lowleveldesign.crms.Services.Building.IBuildingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/crms/buildings")
 public class BuildingController {
+
     @Autowired
     private IBuildingService buildingService; //Always keep these member as private
     @PostMapping("")
@@ -28,6 +31,7 @@ public class BuildingController {
 
     @GetMapping("")
     public ResponseEntity<List<Building>> getAllBuildings() {
+
         List<Building> buildings = buildingService.getAllBuildings();
         if(buildings.isEmpty())
             return new ResponseEntity<>(buildings, HttpStatus.NO_CONTENT);
@@ -36,6 +40,7 @@ public class BuildingController {
 
     @GetMapping("/{buildingId}")
     public ResponseEntity<Building> getBuilding(@PathVariable("buildingId") UUID buildingId) {
+
         Building building = buildingService.getBuildingById(buildingId);
 
         if(building == null)

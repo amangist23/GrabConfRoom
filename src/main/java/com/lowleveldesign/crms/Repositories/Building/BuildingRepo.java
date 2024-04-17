@@ -1,16 +1,21 @@
 package com.lowleveldesign.crms.Repositories.Building;
 
+import com.lowleveldesign.crms.Controllers.BuildingController;
 import com.lowleveldesign.crms.ErrorHandling.GenericClientException;
 import com.lowleveldesign.crms.Models.Building;
 import com.lowleveldesign.crms.Models.Floor;
 import com.lowleveldesign.crms.Models.Room;
 import com.lowleveldesign.crms.Utilities.Slot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
 @Repository
 public class BuildingRepo implements IBuildingRepo{
+    private static final Logger logger = LoggerFactory.getLogger(BuildingController.class);
+
     private Map<UUID, Building> buildingMap;
 
     private BuildingRepo( ) {
@@ -27,8 +32,10 @@ public class BuildingRepo implements IBuildingRepo{
     public Floor addFloor(UUID buildingId, Floor floor) {
         Building building = buildingMap.get(buildingId);
 
-        if(building == null)
+        if(building == null){
+            logger.error("You can't add any floor to the Building with buildingId: {} that doesn't exist.",buildingId);
             throw new GenericClientException("You can't add any floor to the Building that doesn't exist.");
+        }
 
         List<Floor> floors = building.getFloorsInBuilding();
         floors.add(floor);
@@ -39,13 +46,17 @@ public class BuildingRepo implements IBuildingRepo{
     public Room addConfRoom(UUID buildingId, UUID floorId, Room confRoom) {
         Building building = buildingMap.get(buildingId);
 
-        if(building == null)
+        if(building == null){
+            logger.error("You can't add any conference to the Building with buildingId: {} that doesn't exist.",buildingId);
             throw new GenericClientException("You can't add any conference to the Building that doesn't exist!");
+        }
 
         List<Floor> floors = building.getFloorsInBuilding();
 
-        if(floors.size() == 0)
+        if(floors.size() == 0){
+            logger.error("You can't add any conference to the Building with buildingId: {} that doesn't have any Floor!",buildingId);
             throw new GenericClientException("You can't add any conference to the Building that doesn't have any Floor!");
+        }
 
         //Iterate through floors and find the floor with the given id;
         for(Floor floor: floors){
@@ -57,6 +68,7 @@ public class BuildingRepo implements IBuildingRepo{
                 rooms.add(confRoom);
             }
             else if(floors.indexOf(floor) == floors.size()-1){
+                logger.error("You can't add any conference to the Floor with floorId: {} that doesn't exist!",floorId);
                 throw new GenericClientException("You can't add any conference to the Floor that doesn't exist!");
             }
         }

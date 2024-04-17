@@ -3,6 +3,8 @@ package com.lowleveldesign.crms.Controllers;
 import com.lowleveldesign.crms.Models.Booking;
 import com.lowleveldesign.crms.Models.Building;
 import com.lowleveldesign.crms.Services.Booking.BookingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,6 @@ public class BookingController {
     @Autowired
     BookingService bookingService; //To Do-
 
-    //
     @PostMapping("")
     public ResponseEntity<Booking> addBooking(@RequestBody Booking booking){
         //Here I am taking the entire Booking object from the request body although i am ignoring the booking id as
