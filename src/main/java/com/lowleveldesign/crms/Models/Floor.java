@@ -1,12 +1,20 @@
 package com.lowleveldesign.crms.Models;
 
+import jakarta.persistence.*;
+
 import java.util.List;
 import java.util.UUID;
 
+@Entity
 public class Floor {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "floor_id")
     private UUID floorId;
-    private List<Room> roomsInFloor;
-    private int totalConfrooms;    //Additional fields or properties
+
+    @ManyToOne
+    @JoinColumn(name = "building_id")
+    private Building building;
 
     public UUID getFloorId(){
         return floorId;
@@ -14,10 +22,11 @@ public class Floor {
     public void setFloorId(UUID id){
         floorId = id;
     }
-    public List<Room> getRoomsInFloor(){
-        return roomsInFloor;
+    public Building getBuilding() {
+        return building;
     }
-    public void setRoomsInFloor(List<Room> rooms){
-        roomsInFloor = rooms;
+
+    public void setBuilding(Building building) {
+        this.building = building;
     }
 }

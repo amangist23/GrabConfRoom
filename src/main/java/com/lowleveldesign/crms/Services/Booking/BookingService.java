@@ -1,17 +1,14 @@
 package com.lowleveldesign.crms.Services.Booking;
 
 import com.lowleveldesign.crms.Controllers.FloorController;
+import com.lowleveldesign.crms.Utilities.DTOMappers.BookingDtoMapper;
+import com.lowleveldesign.crms.DTOModels.BookingDto;
+import com.lowleveldesign.crms.DTOModels.SlotDto;
 import com.lowleveldesign.crms.ErrorHandling.GenericClientException;
 import com.lowleveldesign.crms.ErrorHandling.ResourceNotFoundException;
 import com.lowleveldesign.crms.ErrorHandling.UserNotFoundException;
-import com.lowleveldesign.crms.Models.Booking;
-import com.lowleveldesign.crms.Models.Building;
-import com.lowleveldesign.crms.Models.Floor;
-import com.lowleveldesign.crms.Models.Room;
-import com.lowleveldesign.crms.Repositories.Booking.BookingRepo;
-import com.lowleveldesign.crms.Repositories.Booking.IBookingRepo;
-import com.lowleveldesign.crms.Repositories.Building.BuildingRepo;
-import com.lowleveldesign.crms.Repositories.Building.IBuildingRepo;
+import com.lowleveldesign.crms.Models.*;
+import com.lowleveldesign.crms.Repositories.Booking.IBookingDao;
 import com.lowleveldesign.crms.Services.Room.IRoomService;
 import com.lowleveldesign.crms.Services.User.IUserService;
 import com.lowleveldesign.crms.Utilities.BookingStatus;
@@ -23,58 +20,89 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 @Component
 public class BookingService implements IBookingService{
     private static final Logger logger = LoggerFactory.getLogger(FloorController.class);
 
     @Autowired
-    private IBookingRepo bookingRepo;
-    @Autowired
-    private IBuildingRepo buildingRepo;
-    @Autowired
     private IRoomService roomService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IBookingDao bookingDao;
 
     @Override
-    public Booking addBooking(Booking booking) {
+    public BookingDto addBooking(BookingDto bookingDto) {
+        try{
+           if(isBookingValidated(bookingDto)){
+               User user = userService.getUserById(bookingDto.getUserId());
+               Room room = roomService.getRoomById(bookingDto.getConfRoomId());
 
-        try {
-           //check whether the User exists or not
-           // check whether the conference room exists and slot is available.
-           // check whether the slot is available. and Slot is valid also (slot can't be null and time should not be in past)
-           //booked slot update it inside building repo
-           if((userService.getUserById(booking.getUserId()) != null) &&
-                   (roomService.getRoomById(booking.getConfRoomId()) != null) &&
-                   (isSlotValid(booking.getBookedSlot())) && (isSlotAvailable(booking.getConfRoomId(), booking.getBookedSlot()))){
-               UUID id = UUID.randomUUID();
-               booking.setBookingId(id);
-               booking.setStatus(BookingStatus.ACTIVE);
-
-               bookingRepo.addBooking(booking);
-               return booking;
+               Booking booking = BookingDtoMapper.getBookingInstance(bookingDto, user, room);
+               bookingDao.save(booking);
+               roomService.reserveSlot(bookingDto.getConfRoomId(), bookingDto.getBookedSlot());
            }
-        }catch (UserNotFoundException ex){
-            logger.error("User with userId: {} cannot make a booking as this user is not a registered User!", booking.getUserId());
+        }
+        catch (UserNotFoundException ex){
+            logger.error("User with userId: {} cannot make a booking as this user is not a registered User!", bookingDto.getUserId());
             throw new GenericClientException("You cannot make a booking as you are not a registered User!");
         }
         catch (ResourceNotFoundException ex){
-            logger.error("User with userId: {} cannot make a booking as the conference room with confRoomId:{} doesn't exist!", booking.getUserId(), booking.getConfRoomId());
+            logger.error("User with userId: {} cannot make a booking as the conference room with confRoomId:{} doesn't exist!", bookingDto.getUserId(), bookingDto.getConfRoomId());
             throw new GenericClientException("You cannot make a booking to a Conference Room that doesn't exist!");
         }
 
-        return null;
+        return bookingDto;
+    }
+
+    private Boolean isBookingValidated(BookingDto bookingDto){
+        User user = userService.getUserById(bookingDto.getUserId());
+        if(user == null){
+            //To do:- Throw and exception that user doesn't exist. and also add logs.
+
+        }
+
+        Room room = roomService.getRoomById(bookingDto.getConfRoomId());
+        if(room == null){
+
+        }
+        if(!isSlotAvailable(bookingDto.getConfRoomId(), bookingDto.getBookedSlot())){
+
+        }
+
+        return true;
     }
 
     @Override
-    public Booking cancelBooking(Booking booking) {
-        booking.setStatus(BookingStatus.CANCELLED);
-        return bookingRepo.cancelBooking(booking);
+    public BookingDto cancelBooking(BookingDto bookingDto) {
+
+//        booking.setStatus(BookingStatus.CANCELLED);
+//        return bookingRepo.cancelBooking(booking);
+        Optional<Booking> booking = bookingDao.findById(bookingDto.getBookingId());
+
+        if(booking.isPresent()){
+            Booking booking1 = booking.orElse(null);
+            if(booking1!=null) {
+                booking1.setBookingStatus(BookingStatus.CANCELLED.toString());
+                bookingDao.save(booking1);
+                roomService.unreserveSlot(bookingDto.getConfRoomId(), bookingDto.getBookedSlot());
+            }
+        }
+        bookingDto.setStatus(BookingStatus.CANCELLED);
+        return bookingDto;
     }
     @Override
-    public Booking getBookingById(UUID bookingId){
-        return bookingRepo.getBookingById(bookingId);
+    public BookingDto getBookingById(UUID bookingId){
+        Optional<Booking> booking = bookingDao.findById(bookingId);
+
+        BookingDto bookingDto = new BookingDto();
+        if(booking.isPresent()){
+            bookingDto = BookingDtoMapper.getBookingDtoInstance(booking.orElse(null));
+        }
+
+        return bookingDto;
     }
 
     private boolean isSlotValid(Slot slot){
@@ -92,7 +120,7 @@ public class BookingService implements IBookingService{
         return true;
     }
     @Override
-    public boolean isSlotAvailable(UUID confRoomId, Slot slot){
+    public boolean isSlotAvailable(UUID confRoomId, SlotDto bookedSlot){
         Room confRoom = roomService.getRoomById(confRoomId);
 
         if(confRoom != null){
@@ -102,23 +130,24 @@ public class BookingService implements IBookingService{
         return true;
     }
     @Override
-    public List<Booking> getAllBookings(UUID userId, UUID buildingId, UUID floorId, UUID confRoomId) {
-        List<Booking> bookings = null;
+    public List<BookingDto> getAllBookings(UUID userId, UUID buildingId, UUID floorId, UUID confRoomId) {
+        List<BookingDto> bookingsDto = null;
 
-        //Get bookings for particular user
-        if(userId != null)
-            bookings = getBookingsByUser(userId, buildingId, floorId, confRoomId);
+        if(confRoomId == null && floorId == null && buildingId == null){
+            List<Booking> bookings = bookingDao.findAll();
+            bookings.forEach((booking)->{
+                bookingsDto.add(BookingDtoMapper.getBookingDtoInstance(booking));
+            });
+        }
 
-        //Get all the bookings for particular conference room
-        if(userId == null && buildingId == null && floorId == null && confRoomId != null)
-            bookings = getBookingsByConfRoom(confRoomId);
-        return bookings;
-    }
-
-    private List<Booking> getBookingsById(UUID bookingId) {
-        List<Booking> bookings = new ArrayList<Booking>();
-        bookings.add(bookingRepo.getBookingById(bookingId));
-        return bookings;
+//        //Get bookings for particular user
+//        if(userId != null)
+//            bookings = getBookingsByUser(userId, buildingId, floorId, confRoomId);
+//
+//        //Get all the bookings for particular conference room
+//        if(userId == null && buildingId == null && floorId == null && confRoomId != null)
+//            bookings = getBookingsByConfRoom(confRoomId);
+        return bookingsDto;
     }
 
     @Override
@@ -126,7 +155,8 @@ public class BookingService implements IBookingService{
         List<Booking> bookings = null;
 
         if(buildingId == null && floorId == null && confRoomId == null)
-            return bookingRepo.getBookingsByUserId(userId);
+            return null;
+//            return bookingRepo.getBookingsByUserId(userId);
         else if(buildingId != null && floorId == null && confRoomId == null)
             return getBookingsByUserNBuilding(userId, buildingId);
         else if(buildingId != null && floorId != null && confRoomId == null)
@@ -142,50 +172,50 @@ public class BookingService implements IBookingService{
     }
 
     private List<Booking> getBookingsByUserNBuilding(UUID userId, UUID buildingId){
-        Building buildings = buildingRepo.getBuildingById(buildingId);
-        List<Floor> floors = buildings.getFloorsInBuilding();
+//        Building buildings = buildingRepo.getBuildingById(buildingId);
+//        List<Floor> floors = buildings.getFloorsInBuilding();
 
         List<UUID> confRoomIds = new ArrayList<UUID>();
 
-        for (Floor floor: floors){
-            floor.getRoomsInFloor().forEach(room -> {
-                confRoomIds.add(room.getConfroomId());
-            });
-        }
+//        for (Floor floor: floors){
+//            floor.getRoomsInFloor().forEach(room -> {
+//                confRoomIds.add(room.getConfroomId());
+//            });
+//        }
 
-        List<Booking> bookings = bookingRepo.getBookingsByUserId(userId);
+//        List<Booking> bookings = bookingRepo.getBookingsByUserId(userId);
 
-        List<Booking> filteredBookings =  bookings.stream()
-                .filter(booking -> confRoomIds.contains(booking.getConfRoomId()))
-                .toList();
-        return filteredBookings;
+//        List<Booking> filteredBookings =  bookings.stream()
+//                .filter(booking -> confRoomIds.contains(booking.getConfRoomId()))
+//                .toList();
+        return null;
     }
 
     private List<Booking> getBookingsByUserNFloor(UUID userId, UUID buildingId, UUID floorId){
-        Building buildings = buildingRepo.getBuildingById(buildingId);
-        List<Floor> floors = buildings.getFloorsInBuilding();
+//        Building buildings = buildingRepo.getBuildingById(buildingId);
+//        List<Floor> floors = buildings.getFloorsInBuilding();
 
         List<UUID> confRoomIds = new ArrayList<UUID>();
 
-        for (Floor floor: floors){
-            if(floor.getFloorId() == floorId){
-                floor.getRoomsInFloor().forEach(room -> {
-                    confRoomIds.add(room.getConfroomId());
-                });
-                break;
-            }
-        }
+//        for (Floor floor: floors){
+//            if(floor.getFloorId() == floorId){
+//                floor.getRoomsInFloor().forEach(room -> {
+//                    confRoomIds.add(room.getConfroomId());
+//                });
+//                break;
+//            }
+//        }
 
-        List<Booking> bookings = bookingRepo.getBookingsByUserId(userId);
-
-        List<Booking> filteredBookings =  bookings.stream()
-                .filter(booking -> confRoomIds.contains(booking.getConfRoomId()))
-                .toList();
-        return filteredBookings;
+//        List<Booking> bookings = bookingRepo.getBookingsByUserId(userId);
+//
+//        List<Booking> filteredBookings =  bookings.stream()
+//                .filter(booking -> confRoomIds.contains(booking.getConfRoomId()))
+//                .toList();
+        return null;
     }
     private List<Booking> getBookingsByConfRoom(UUID confRoomId) {
         List<Booking> bookings = null;
-        bookings.add(bookingRepo.getBookingByConfRoomId(confRoomId));
+//        bookings.add(bookingRepo.getBookingByConfRoomId(confRoomId));
         return bookings;
     }
 }

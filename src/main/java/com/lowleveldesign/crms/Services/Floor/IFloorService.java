@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface IFloorService {
     public Floor addFloor(UUID buildingId, Floor floor);
+    public Floor getFloor(UUID floorId);
 }

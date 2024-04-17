@@ -1,53 +1,88 @@
 package com.lowleveldesign.crms.Models;
 
+import com.lowleveldesign.crms.DTOModels.BookingDto;
 import com.lowleveldesign.crms.Utilities.BookingStatus;
 import com.lowleveldesign.crms.Utilities.Slot;
+import jakarta.persistence.*;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 
+@Entity
+@Table
 public class Booking {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "booking_id")
     private UUID bookingId;
-    private UUID userId;
-    private UUID confRoomId;
-    private Slot bookedSlot;
-    private BookingStatus status;
-    //booking Status enum//
 
-    public UUID getBookingId(){
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "confroom_id")
+    private Room room;
+//    private Slot bookedSlot;// To Do: Mapping is not feasible and necessay , direclty store two columns for start and end time.
+    @Column(name = "start_of_slot")
+    private Timestamp startOfSlot;
+    @Column(name = "end_of_slot")
+    private Timestamp endOfSlot;
+
+    @Column(name = "booking_status")
+    private String bookingStatus;
+
+    public UUID getBookingId() {
         return bookingId;
     }
-    public void setBookingId(UUID id){
-        bookingId = id;
+
+    public void setBookingId(UUID bookingId) {
+        this.bookingId = bookingId;
     }
 
-    public UUID getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-    public UUID getConfRoomId() {
-        return confRoomId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public void setConfRoomId(UUID confRoomId) {
-        this.confRoomId = confRoomId;
+    public Room getRoom() {
+        return room;
     }
 
-    public Slot getBookedSlot() {
-        return bookedSlot;
+    public void setRoom(Room room) {
+        this.room = room;
     }
 
-    public void setBookedSlot(Slot bookedSlot) {
-        this.bookedSlot = bookedSlot;
+    public Timestamp getStartOfSlot() {
+        return startOfSlot;
     }
 
-    public BookingStatus getStatus() {
-        return status;
+    public void setStartOfSlot(Timestamp startOfSlot) {
+        this.startOfSlot = startOfSlot;
     }
 
-    public void setStatus(BookingStatus status) {
-        this.status = status;
+    public Timestamp getEndOfSlot() {
+        return endOfSlot;
+    }
+
+    public void setEndOfSlot(Timestamp endOfSlot) {
+        this.endOfSlot = endOfSlot;
+    }
+
+    public String getBookingStatus() {
+        return bookingStatus;
+    }
+
+    public void setBookingStatus(String bookingStatus) {
+        this.bookingStatus = bookingStatus;
+    }
+
+    public static Booking getBookingFromBookingDto(BookingDto bookingDto){
+
+        return null;
     }
 }

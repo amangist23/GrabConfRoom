@@ -1,8 +1,15 @@
 package com.lowleveldesign.crms.Models;
 
+import jakarta.persistence.*;
+import org.springframework.boot.autoconfigure.web.WebProperties;
+
 import java.util.UUID;
 
+@Entity
+@Table
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID userId;
     private String userName;
 
