@@ -15,8 +15,6 @@ import java.util.UUID;
 @Service
 public class FloorService implements IFloorService{
     @Autowired
-    private IBuildingRepo buildingRepo; //Use interface here for loose coupling
-    @Autowired
     private IBuildingDao buildingDao;
 
     @Autowired

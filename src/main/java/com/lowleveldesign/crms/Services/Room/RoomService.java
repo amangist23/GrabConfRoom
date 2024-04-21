@@ -21,9 +21,6 @@ import java.util.UUID;
 @Service
 public class RoomService implements IRoomService{
     private static final Logger logger = LoggerFactory.getLogger(FloorController.class);
-
-    @Autowired
-    private IBuildingRepo buildingRepo; //Use interface here for loose coupling
     @Autowired
     private IBuildingService buildingService;
     @Autowired

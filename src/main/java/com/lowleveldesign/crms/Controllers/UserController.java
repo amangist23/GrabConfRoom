@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,5 +36,10 @@ public class UserController {
     public ResponseEntity<User> getUserById(@PathVariable("userId") UUID userId){
         User user = userService.getUserById(userId);
         return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @GetMapping("current-user")
+    public String getLoggedInUser(Principal principal){
+        return principal.getName();
     }
 }

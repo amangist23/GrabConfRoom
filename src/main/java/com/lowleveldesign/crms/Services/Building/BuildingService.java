@@ -11,8 +11,6 @@ import java.util.Optional;
 import java.util.UUID;
 @Service
 public class BuildingService implements IBuildingService{
-    @Autowired
-    private IBuildingRepo buildingRepo; //Use interface here for loose coupling
 
     @Autowired
     private IBuildingDao buildingDao;

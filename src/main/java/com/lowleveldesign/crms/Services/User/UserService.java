@@ -17,9 +17,6 @@ public class UserService implements IUserService{
     private static final Logger logger = LoggerFactory.getLogger(BuildingController.class);
 
     @Autowired
-    private IUserRepo userRepo;
-
-    @Autowired
     private IUserDao userDao;
 
     //Model class should not be singleton, it will create references to a single object only inside map
