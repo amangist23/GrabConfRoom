@@ -7,6 +7,7 @@ import com.lowleveldesign.crms.Repositories.User.IUserDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,10 +22,15 @@ public class UserService implements IUserService{
 
     //Model class should not be singleton, it will create references to a single object only inside map
     private User user;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Override
-    public User addUser(String name) {
+    public User addUser(User regUser) {
         user = new User();
-        user.setUserName(name);
+        user.setPassword(passwordEncoder.encode(regUser.getPassword()));
+
+        user.setEmail(regUser.getEmail());
+        user.setRoles(regUser.getRoles());
 
         return userDao.save(user);
     }

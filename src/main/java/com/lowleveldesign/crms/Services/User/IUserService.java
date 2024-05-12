@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IUserService {
-    public User addUser(String userName);
+    public User addUser(User user);
     public User getUserById(UUID userId);
     public List<User> getAllUsers();
 }
